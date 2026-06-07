@@ -1,0 +1,38 @@
+{% set NGX_MODULES_LOADED_LIST =  NGX_MODULES_LOADED.split(',') %}
+server {
+    listen 80 default_server reuseport;
+{% if NGX_IPV6_ENABLED is sameas true or NGX_IPV6_ENABLED == "true" %}
+    listen [::]:80 default_server reuseport;
+{% endif %}
+
+    location '/nginx_status' {
+        stub_status;
+        access_log    off;
+        log_not_found off;
+
+        allow 127.0.0.1;
+        allow 10.0.0.0/8;
+        allow 192.168.0.0/16;
+        allow 172.16.0.0/12;
+        deny all;
+    }
+
+{% if 'ngx_http_vhost_traffic_status' in NGX_MODULES_LOADED_LIST %}
+    location /metrics {
+        vhost_traffic_status_display;
+        vhost_traffic_status_display_format prometheus;
+        server_tokens off;
+        access_log off;
+
+        allow 127.0.0.1;
+        allow 10.0.0.0/8;
+        allow 192.168.0.0/16;
+        allow 172.16.0.0/12;
+        deny all;
+    }
+{% endif %}
+
+    location / {
+        return 301 https://$http_host$request_uri;
+    }
+}

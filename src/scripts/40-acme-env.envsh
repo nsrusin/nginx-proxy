@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+
+: "${ACME_EMAIL:?ACME_EMAIL environment variable is required}"
+
+if [ "${ACME_STAGING:-0}" = "1" ] || [ "${ACME_STAGING:-0}" = "true" ]; then
+  export ACME_DIRECTORY_URI="https://acme-staging-v02.api.letsencrypt.org/directory"
+else
+  export ACME_DIRECTORY_URI="https://acme-v02.api.letsencrypt.org/directory"
+fi
+
+export ACME_EMAIL ACME_DIRECTORY_URI
+
+mkdir -p /var/cache/nginx/acme-letsencrypt
+chown -R nginx:nginx /var/cache/nginx
