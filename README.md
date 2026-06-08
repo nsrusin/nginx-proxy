@@ -62,7 +62,12 @@ server {
 
 ### CI/CD
 
-Сборка, Trivy-скан и push в Docker Hub — GitHub Actions (`.github/workflows/docker.yml`).
+Сборка, линтеры, Trivy-скан и push в Docker Hub — GitHub Actions (`.github/workflows/docker.yml`).
+
+Перед сборкой job **lint** проверяет:
+- **actionlint** — workflow-файлы
+- **hadolint** — `Dockerfile` (конфиг `.hadolint.yaml`)
+- **shellcheck** — скрипты в `src/scripts/`
 
 Версии nginx, модулей и GeoLite2 mirror заданы в `env` workflow-файла и передаются в `docker build` через `build-args`.
 

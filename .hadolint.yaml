@@ -1,0 +1,13 @@
+ignored:
+  # Multi-step compile in one RUN layer; cd is intentional.
+  - DL3003
+  # Bulk Alpine build-deps are intentionally unpinned except critical tools (g++).
+  - DL3018
+  # Single RUN keeps image smaller for a from-source nginx build.
+  - DL3059
+  # Default /bin/sh -c is fine for this image.
+  - DL4006
+  # curl + wget both used in compile RUN; pipefail under hadolint's default /bin/sh parse.
+  - DL3047
+  - DL4001
+  - SC3040
