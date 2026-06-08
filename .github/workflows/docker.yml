@@ -100,7 +100,7 @@ jobs:
             NGX_ACME_TAG=${{ env.NGX_ACME_TAG }}
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.29.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ${{ env.DOCKER_IMAGE }}:${{ steps.tags.outputs.scan_tag }}
           format: table
