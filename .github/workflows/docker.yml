@@ -1,0 +1,101 @@
+name: Build and publish
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  DOCKER_IMAGE: s1ncher/nginx-proxy
+
+  NGINX_VERSION: "1.31.1"
+  GPP_VER: "15.2.0-r2"
+  LUAROCS_VER: "3.13.0"
+  LIBMAXMINDDB_VERSION: "1.13.3"
+
+  GEOLITE_MIRROR_BASE: "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release"
+
+  NGX_BROTLI_COMMIT: "a71f9312c2deb28875acc7bacfdd5695a111aa53"
+  NGX_TESTCOOKIE_COMMIT: "7d263d4322b7de6b99b486e5e10ecaf0295890ad"
+  NGX_GEOIP2_COMMIT: "cbaa35461c62a99d2577e6bae3273492502d8769"
+  NGX_VTS_COMMIT: "b2a036ab6c1ffd5615f9ea57d6710287590735cd"
+  NGX_UPSTREAM_HC_TAG: "1.3.8"
+  NGX_DYNAMIC_UPSTREAM_TAG: "2.3.5"
+  NGX_LUAJIT_TAG: "v2.1-20260415"
+  NGX_DEVELKIT_TAG: "v0.3.4"
+  NGX_LUA_TAG: "v0.10.29"
+  NGX_LUA_RCORE_TAG: "v0.1.32"
+  NGX_LUA_LRUC_TAG: "v0.15"
+  NGX_HEADERS_MORE_TAG: "v0.39"
+  NGX_ACME_TAG: "v0.4.0"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            type=raw,value=${{ env.NGINX_VERSION }},enable=${{ github.event_name == 'push' }}
+            type=raw,value=latest,enable=${{ github.event_name == 'push' }}
+            type=raw,value=${{ env.NGINX_VERSION }}-pr${{ github.event.pull_request.number }},enable=${{ github.event_name == 'pull_request' }}
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NGINX_VERSION=${{ env.NGINX_VERSION }}
+            GPP_VER=${{ env.GPP_VER }}
+            LUAROCS_VER=${{ env.LUAROCS_VER }}
+            LIBMAXMINDDB_VERSION=${{ env.LIBMAXMINDDB_VERSION }}
+            GEOLITE_MIRROR_BASE=${{ env.GEOLITE_MIRROR_BASE }}
+            NGX_BROTLI_COMMIT=${{ env.NGX_BROTLI_COMMIT }}
+            NGX_TESTCOOKIE_COMMIT=${{ env.NGX_TESTCOOKIE_COMMIT }}
+            NGX_GEOIP2_COMMIT=${{ env.NGX_GEOIP2_COMMIT }}
+            NGX_VTS_COMMIT=${{ env.NGX_VTS_COMMIT }}
+            NGX_UPSTREAM_HC_TAG=${{ env.NGX_UPSTREAM_HC_TAG }}
+            NGX_DYNAMIC_UPSTREAM_TAG=${{ env.NGX_DYNAMIC_UPSTREAM_TAG }}
+            NGX_LUAJIT_TAG=${{ env.NGX_LUAJIT_TAG }}
+            NGX_DEVELKIT_TAG=${{ env.NGX_DEVELKIT_TAG }}
+            NGX_LUA_TAG=${{ env.NGX_LUA_TAG }}
+            NGX_LUA_RCORE_TAG=${{ env.NGX_LUA_RCORE_TAG }}
+            NGX_LUA_LRUC_TAG=${{ env.NGX_LUA_LRUC_TAG }}
+            NGX_HEADERS_MORE_TAG=${{ env.NGX_HEADERS_MORE_TAG }}
+            NGX_ACME_TAG=${{ env.NGX_ACME_TAG }}
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.DOCKER_IMAGE }}:${{ github.event_name == 'push' && env.NGINX_VERSION || format('{0}-pr{1}', env.NGINX_VERSION, github.event.pull_request.number) }}
+          format: table
+          exit-code: "1"
+          ignore-unfixed: true
+          vuln-type: os,library
+          severity: CRITICAL,HIGH

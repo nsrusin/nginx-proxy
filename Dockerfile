@@ -1,70 +1,69 @@
-ARG NGINX_VERSION=1.31.1
+ARG NGINX_VERSION
 FROM nginx:${NGINX_VERSION}-alpine
 
-ARG PIP_JINJA2_VERSION=3.1.6
+ARG NGINX_VERSION
+ARG GPP_VER
+ARG LUAROCS_VER
+ARG LIBMAXMINDDB_VERSION
+ARG GEOLITE_MIRROR_BASE
+
+ARG NGX_BROTLI_COMMIT
+ARG NGX_TESTCOOKIE_COMMIT
+ARG NGX_GEOIP2_COMMIT
+ARG NGX_VTS_COMMIT
+ARG NGX_UPSTREAM_HC_TAG
+ARG NGX_DYNAMIC_UPSTREAM_TAG
+ARG NGX_LUAJIT_TAG
+ARG NGX_DEVELKIT_TAG
+ARG NGX_LUA_TAG
+ARG NGX_LUA_RCORE_TAG
+ARG NGX_LUA_LRUC_TAG
+ARG NGX_HEADERS_MORE_TAG
+ARG NGX_ACME_TAG
 
 ENV NGX_BROTLI_REPO=https://github.com/google/ngx_brotli.git \
-    NGX_BROTLI_COMMIT=a71f9312c2deb28875acc7bacfdd5695a111aa53 \
     NGX_BROTLI_PATH=ngx_brotli
 
 ENV NGX_TESTCOOKIE_REPO=https://github.com/kyprizel/testcookie-nginx-module.git \
-    NGX_TESTCOOKIE_COMMIT=7d263d4322b7de6b99b486e5e10ecaf0295890ad \
     NGX_TESTCOOKIE_PATH=testcookie-nginx-module
 
 ENV NGX_GEOIP2_REPO=https://github.com/leev/ngx_http_geoip2_module.git \
-    NGX_GEOIP2_COMMIT=cbaa35461c62a99d2577e6bae3273492502d8769 \
     NGX_GEOIP2_PATH=ngx_http_geoip2_module
 
-ENV LIBMAXMINDDB_VERSION=1.13.3 \
-    LIBMAXMINDDB_PATH=libmaxminddb
+ENV LIBMAXMINDDB_PATH=libmaxminddb
 
 ENV NGX_VTS_REPO=https://github.com/vozlt/nginx-module-vts.git \
-    NGX_VTS_COMMIT=b2a036ab6c1ffd5615f9ea57d6710287590735cd \
     NGX_VTS_PATH=ngx_vts
 
-ENV MAXMIND_PATH=GeoIP2 \
-    MAXMIND_CITY_PATH=GeoIP2City
-
-ENV NGX_UPSTREAM_HC_TAG=1.3.8 \
-    NGX_UPSTREAM_HC_MODULE_PATH=ngx_upstream_hc \
+ENV NGX_UPSTREAM_HC_MODULE_PATH=ngx_upstream_hc \
     NGX_UPSTREAM_HC_MODULE_REPO=https://github.com/ZigzagAK/ngx_dynamic_healthcheck.git
 
-ENV NGX_DYNAMIC_UPSTREAM_TAG=2.3.5 \
-    NGX_DYNAMIC_UPSTREAM_MODULE_PATH=ngx_dyn_upstream \
+ENV NGX_DYNAMIC_UPSTREAM_MODULE_PATH=ngx_dyn_upstream \
     NGX_DYNAMIC_UPSTREAM_MODULE_REPO=https://github.com/ZigzagAK/ngx_dynamic_upstream.git
 
-ENV NGX_LUAJIT_TAG=v2.1-20260415 \
-    NGX_LUAJIT_PATH=ngx_luajit \
+ENV NGX_LUAJIT_PATH=ngx_luajit \
     NGX_LUAJIT_REPO=https://github.com/openresty/luajit2.git
 
-ENV NGX_DEVELKIT_TAG=v0.3.4 \
-    NGX_DEVELKIT_PATH=ngx_develkit \
+ENV NGX_DEVELKIT_PATH=ngx_develkit \
     NGX_DEVELKIT_REPO=https://github.com/vision5/ngx_devel_kit.git
 
-ENV NGX_LUA_TAG=v0.10.29 \
-    NGX_LUA_PATH=ngx_lua \
+ENV NGX_LUA_PATH=ngx_lua \
     NGX_LUA_REPO=https://github.com/openresty/lua-nginx-module.git
 
-ENV NGX_LUA_RCORE_TAG=v0.1.32 \
-    NGX_LUA_RCORE_PATH=ngx_lua_rcore \
+ENV NGX_LUA_RCORE_PATH=ngx_lua_rcore \
     NGX_LUA_RCORE_REPO=https://github.com/openresty/lua-resty-core.git
 
-ENV NGX_LUA_LRUC_TAG=v0.15 \
-    NGX_LUA_LRUC_PATH=ngx_lua_lruc \
+ENV NGX_LUA_LRUC_PATH=ngx_lua_lruc \
     NGX_LUA_LRUC_REPO=https://github.com/openresty/lua-resty-lrucache.git
 
-ENV NGX_HEADERS_MORE_TAG=v0.39 \
-    NGX_HEADERS_MORE_PATH=ngx_headers_more \
+ENV NGX_HEADERS_MORE_PATH=ngx_headers_more \
     NGX_HEADERS_MORE_REPO=https://github.com/openresty/headers-more-nginx-module.git
 
 ENV NGX_ACME_REPO=https://github.com/nginx/nginx-acme.git \
-    NGX_ACME_TAG=v0.4.0 \
     NGX_ACME_PATH=ngx_acme
 
-ENV LUAROCS_VER=3.13.0
 ENV LUAROCS_PREFIX=/usr/local
 ENV LUAROCS_PKG_DIR=${LUAROCS_PREFIX}/share/lua/5.1
-ENV GPP_VER=15.2.0-r2
 
 ENV LUAJIT_PREFIX=/usr/local
 ENV LUAJIT_LIB=${LUAJIT_PREFIX}/lib
@@ -126,10 +125,10 @@ RUN set -euo pipefail && \
     git clone -b ${NGX_ACME_TAG} --depth 1 ${NGX_ACME_REPO} "${NGX_ACME_PATH}-${NGX_ACME_TAG}" && \
     wget "https://github.com/maxmind/libmaxminddb/releases/download/${LIBMAXMINDDB_VERSION}/libmaxminddb-${LIBMAXMINDDB_VERSION}.tar.gz" -O ${LIBMAXMINDDB_PATH}.tar.gz && \
     wget "http://luarocks.github.io/luarocks/releases/luarocks-${LUAROCS_VER}.tar.gz" -O luarocks.tar.gz && \
-    curl -L -o GeoLite2-Country.mmdb "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-Country.mmdb" && \
+    curl -fsSL -o GeoLite2-Country.mmdb "${GEOLITE_MIRROR_BASE}/GeoLite2-Country.mmdb" && \
     mv -f GeoLite2-Country.mmdb /usr/share/GeoLite2-Country.mmdb && \
     test -s /usr/share/GeoLite2-Country.mmdb && \
-    curl -L -o GeoLite2-City.mmdb "https://raw.githubusercontent.com/8bitsaver/maxmind-geoip/release/GeoLite2-City.mmdb" && \
+    curl -fsSL -o GeoLite2-City.mmdb "${GEOLITE_MIRROR_BASE}/GeoLite2-City.mmdb" && \
     mv -f GeoLite2-City.mmdb /usr/share/GeoLite2-City.mmdb && \
     test -s /usr/share/GeoLite2-City.mmdb && \
     cd ${NGX_LUAJIT_PATH}-${NGX_LUAJIT_TAG} && make PREFIX=${LUAJIT_PREFIX} && make install && \
