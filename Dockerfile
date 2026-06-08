@@ -208,7 +208,7 @@ RUN set -euo pipefail && \
     make modules && make && make install && \
     cd ../ && \
     apk del .build-deps && \
-    rm -rf /tmp/* && \
+    rm -rf /tmp/* /root/.cargo /root/.rustup && \
     mkdir -p /etc/nginx/app \
              /etc/nginx/user_conf.d \
              /etc/nginx/stream.d \

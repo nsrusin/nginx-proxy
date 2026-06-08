@@ -69,6 +69,8 @@ server {
 - **hadolint** — `Dockerfile` (конфиг `.hadolint.yaml`)
 - **shellcheck** — скрипты в `src/scripts/`
 
+После push образа **Trivy v0.71** сканирует только уязвимости ОС/библиотек (`scanners: vuln`); pipeline падает только на **CRITICAL** (HIGH логируются, но не блокируют — часть из них в transitive Rust deps nginx-acme без фикса в наших pin-версиях).
+
 Версии nginx, модулей и GeoLite2 mirror заданы в `env` workflow-файла и передаются в `docker build` через `build-args`.
 
 | Событие | Теги в Docker Hub |
